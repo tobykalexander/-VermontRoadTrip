@@ -160,6 +160,7 @@
     .chip.inactive { opacity: 0.35; filter: grayscale(0.6); }
     .chip-costco  { background: var(--costco); }
     .chip-sams    { background: var(--sams); }
+    .chip-target  { background: #A62229; }
     .chip-tims    { background: var(--tims); }
     .chip-rest    { background: var(--rest); }
     .chip-hotel   { background: var(--hotel); }
@@ -519,6 +520,7 @@
       <div class="filter-chips">
         <div class="chip chip-costco" data-cat="costco" onclick="toggleFilter('costco',this)">🛒 Costco</div>
         <div class="chip chip-sams" data-cat="sams" onclick="toggleFilter('sams',this)">🏬 Sam's Club</div>
+        <div class="chip chip-target inactive" data-cat="target" onclick="toggleFilter('target',this)">🎯 Target</div>
         <div class="chip chip-tims" data-cat="tims" onclick="toggleFilter('tims',this)">☕ Tim Hortons</div>
         <div class="chip chip-rest" data-cat="rest" onclick="toggleFilter('rest',this)">🐾 Rest Areas</div>
         <div class="chip chip-hotel" data-cat="hotel" onclick="toggleFilter('hotel',this)">🏨 Hotels</div>
@@ -576,6 +578,7 @@
 const CATEGORIES = {
   costco: { label: 'Costco', color: '#E8283C', icon: '🛒', hours: 'Mon–Fri 10–8:30, Sat 9:30–7, Sun 10–6' },
   sams:   { label: "Sam's Club", color: '#0060A9', icon: '🏬', hours: 'Daily 9 AM – 8 PM' },
+  target: { label: 'Target', color: '#A62229', icon: '🎯', hours: 'Daily 7/8 AM – 10 PM' },
   tims:   { label: 'Tim Hortons', color: '#C8102E', icon: '☕', hours: 'Early morning – evening' },
   rest:   { label: 'Rest Area', color: '#2E7D52', icon: '🐾', hours: 'Open 24 hours · Dogs welcome on-leash' },
   hotel:  { label: 'Hotel Stay', color: '#7B3F9E', icon: '🏨', hours: 'Check-in: 4 PM · Check-out: 11 AM' },
@@ -625,29 +628,50 @@ const POIS = [
     note:'Open 24 hours · great coffee break mid-Day 2' },
 
   // ── REST AREAS (dog-friendly) ──
-  { cat:'rest', subcat:'basic', leg:1, name:'I-70 E Rest Area', addr:'Near Warrenton, MO (I-70 Eastbound)', lat:38.8060, lng:-91.1430,
-    note:'🐾 Dog walk area · Picnic tables · Vending' },
   { cat:'rest', subcat:'welcome', leg:1, name:'Illinois Welcome Center', addr:'I-70 Eastbound, near St. Elmo, IL', lat:38.8877, lng:-88.9840,
     note:'🐾 Dog-friendly · Clean facilities · Tourist info' },
   { cat:'rest', subcat:'basic', leg:1, name:'Indiana I-70 Rest Area', addr:'I-70 Eastbound, near Knightstown, IN', lat:39.8020, lng:-85.5290,
     note:'🐾 Grassy walk area for dogs · Restrooms open 24/7' },
   { cat:'rest', subcat:'basic', leg:1, name:'Ohio I-70 Rest Area', addr:'I-70 Eastbound, near Springfield, OH', lat:39.9440, lng:-83.8770,
     note:'🐾 Large grassy pet walk area · Picnic tables' },
-  { cat:'rest', subcat:'plaza', leg:2, name:'Ohio Turnpike – Commodore Perry Plaza', addr:'I-90 Eastbound, near Sandusky, OH', lat:41.4480, lng:-82.6920,
-    note:'🐾 Full service plaza · Gas · Food court · Pet walk area' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Angola Service Area', addr:'I-90 Eastbound, near Angola, NY', lat:42.6490, lng:-79.0220,
     note:'🐾 Pet-friendly area · Gas · Food · Near Lake Erie',
     website:'https://www.thruway.ny.gov/travelers/service-areas/an' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Ontario Service Area', addr:'I-90 Eastbound, near Rochester, NY', lat:43.2340, lng:-77.2790,
-    note:'🐾 Full service plaza · Gas · McDonald\'s · Pet walk' },
+    note:'🐾 Full service plaza · Gas · McDonald\'s · Pet walk',
+    website:'https://www.thruway.ny.gov/travelers/service-areas/ot' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Chittenango Service Area', addr:'I-90 Eastbound, near Syracuse, NY', lat:43.0370, lng:-75.8610,
-    note:'🐾 Pet-friendly grassy area · Full services' },
+    note:'🐾 Pet-friendly grassy area · Full services',
+    website:'https://www.thruway.ny.gov/travelers/service-areas/ch' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Pattersonville Service Area', addr:'I-90 Eastbound, near Schenectady, NY', lat:42.8820, lng:-74.1060,
-    note:'🐾 Last major plaza before Albany exit · Gas · Food' },
+    note:'🐾 Last major plaza before Albany exit · Gas · Food',
+    website:'https://www.thruway.ny.gov/travelers/service-areas/pa' },
   { cat:'rest', subcat:'welcome', leg:2, name:'Vermont Welcome Center', addr:'US-7 Northbound, near VT/MA border', lat:42.7780, lng:-73.2820,
     note:'🐾 Welcome to Vermont! · Pet walk area · Maps & info' },
   { cat:'rest', subcat:'basic', leg:3, name:'VT US-7 Rest Area', addr:'US-7 Northbound, near Brandon, VT', lat:43.7900, lng:-73.0850,
     note:'🐾 Quiet Vermont rest stop · Mid-route on Day 3' },
+
+  // ── TARGET (off by default) ──
+  { cat:'target', leg:1, name:'Target', addr:'4250 Rusty Rd, St. Louis, MO', lat:38.5064, lng:-90.3397,
+    note:'Same plaza as Costco — easy combined stop' },
+  { cat:'target', leg:1, name:'Target', addr:'4199 Morse Crossing, Columbus, OH', lat:40.0566, lng:-82.9214,
+    note:'Easton area · Right off I-270, near Costco/Sam\'s' },
+  { cat:'target', leg:1, name:'Target', addr:'3535 Steelyard Dr, Cleveland, OH', lat:41.4583, lng:-81.6888,
+    note:'Steelyard Commons · 5 min from Kimpton Schofield' },
+  { cat:'target', leg:2, name:'Target', addr:'3100 W 117th St, Cleveland, OH', lat:41.4680, lng:-81.7719,
+    note:'West Cleveland · Convenient leaving via I-90' },
+  { cat:'target', leg:2, name:'Target', addr:'6700 Peach St, Erie, PA', lat:42.0549, lng:-80.0950,
+    note:'Right off I-90 in Erie · Halfway to Buffalo' },
+  { cat:'target', leg:2, name:'Target', addr:'2626 Delaware Ave, Buffalo, NY', lat:42.9555, lng:-78.8742,
+    note:'Buffalo / Kenmore · Near the Tim Hortons stop' },
+  { cat:'target', leg:2, name:'Target', addr:'2325 Marketplace Dr, Rochester, NY', lat:43.0784, lng:-77.6321,
+    note:'Henrietta · Same area as Rochester Costco' },
+  { cat:'target', leg:2, name:'Target', addr:'3657 W Genesee St, Syracuse, NY', lat:43.0467, lng:-76.2369,
+    note:'West Syracuse · Off I-690, near I-90' },
+  { cat:'target', leg:2, name:'Target', addr:'1440 Central Ave, Colonie, NY', lat:42.7053, lng:-73.8240,
+    note:'Albany area · Near Latham Sam\'s Club' },
+  { cat:'target', leg:3, name:'Target', addr:'155 Dorset St, South Burlington, VT', lat:44.4658, lng:-73.1825,
+    note:'On US-7 between Manchester and Colchester · Near final destination' },
 ];
 
 // Route waypoints [lat, lng]
@@ -661,7 +685,7 @@ const WAYPOINTS = {
 // ═══════════════════════════════════════════
 // FILTER STATE
 // ═══════════════════════════════════════════
-const activeFilters = new Set(['costco','sams','tims','rest','hotel']);
+const activeFilters = new Set(['costco','sams','tims','rest','hotel']); // target excluded by default
 const activeLegs    = new Set([1, 2, 3]);
 const activeSubcats = new Set(['welcome','plaza','basic']);
 
@@ -893,7 +917,7 @@ function renderSidebar() {
   const container = document.getElementById('poi-list');
   container.innerHTML = '';
 
-  const catOrder = ['hotel','costco','sams','tims','rest'];
+  const catOrder = ['hotel','costco','sams','target','tims','rest'];
   catOrder.forEach(cat => {
     if (!activeFilters.has(cat)) return;
     const pois = POIS.filter(p => p.cat === cat && activeLegs.has(p.leg));
