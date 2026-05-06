@@ -335,6 +335,33 @@
       color: white !important;
     }
 
+    /* Website link button in popup */
+    .popup-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 7px 12px;
+      background: var(--white);
+      color: var(--forest) !important;
+      text-decoration: none;
+      border: 2px solid var(--forest);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: all 0.15s ease;
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .popup-link-btn:hover {
+      background: var(--cream-dk);
+    }
+    .popup-link-btn + .apple-maps-btn {
+      margin-top: 6px;
+    }
+
     /* ── MAP ── */
     #map { flex: 1; z-index: 1; }
 
@@ -609,7 +636,8 @@ const POIS = [
   { cat:'rest', subcat:'plaza', leg:2, name:'Ohio Turnpike – Commodore Perry Plaza', addr:'I-90 Eastbound, near Sandusky, OH', lat:41.4480, lng:-82.6920,
     note:'🐾 Full service plaza · Gas · Food court · Pet walk area' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Angola Service Area', addr:'I-90 Eastbound, near Angola, NY', lat:42.6490, lng:-79.0220,
-    note:'🐾 Pet-friendly area · Gas · Food · Near Lake Erie' },
+    note:'🐾 Pet-friendly area · Gas · Food · Near Lake Erie',
+    website:'https://www.thruway.ny.gov/travelers/service-areas/an' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Ontario Service Area', addr:'I-90 Eastbound, near Rochester, NY', lat:43.2340, lng:-77.2790,
     note:'🐾 Full service plaza · Gas · McDonald\'s · Pet walk' },
   { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Chittenango Service Area', addr:'I-90 Eastbound, near Syracuse, NY', lat:43.0370, lng:-75.8610,
@@ -787,6 +815,7 @@ function renderMarkers() {
           <div class="popup-hours">${c.hours}</div>
           ${poi.note ? `<div class="popup-note">${poi.note}</div>` : ''}
           ${poi.phone ? `<div class="popup-hours">📞 ${poi.phone}</div>` : ''}
+          ${poi.website ? `<a class="popup-link-btn" href="${poi.website}" target="_blank" rel="noopener">🔗 Visit Website</a>` : ''}
           <a class="apple-maps-btn" href="${appleMapsURL(poi)}" target="_blank" rel="noopener">🍎 Open in Apple Maps</a>
         </div>
       `)
