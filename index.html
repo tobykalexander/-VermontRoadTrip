@@ -169,6 +169,7 @@
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px dashed var(--cream-dk);
+      transition: opacity 0.2s ease;
     }
     .chip-day {
       background: var(--white);
@@ -281,12 +282,57 @@
     }
     .poi-card:hover { background: var(--cream-dk); transform: translateX(2px); }
     .poi-card.active { background: var(--cream-dk); }
+    .poi-card-top { display: flex; align-items: flex-start; gap: 10px; }
+    .poi-card-main { flex: 1; min-width: 0; }
     .poi-card-name { font-size: 13px; font-weight: 700; color: var(--text); }
     .poi-card-addr { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .poi-card-meta { font-size: 10px; color: var(--muted); margin-top: 4px; display: flex; gap: 8px; align-items: center; }
+    .poi-card-meta { font-size: 10px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; }
+    .poi-card-note-text { line-height: 1.4; }
     .poi-card-badge {
       font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
       padding: 1px 6px; border-radius: 3px; color: white; text-transform: uppercase;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .apple-maps-icon {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1px solid var(--cream-dk);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .apple-maps-icon:hover {
+      background: var(--forest);
+      border-color: var(--forest);
+      transform: scale(1.1);
+    }
+
+    /* Apple Maps button in popup */
+    .apple-maps-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 7px 12px;
+      background: var(--forest);
+      color: var(--cream) !important;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: all 0.15s ease;
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .apple-maps-btn:hover {
+      background: var(--forest-mid);
+      color: white !important;
     }
 
     /* ── MAP ── */
@@ -428,6 +474,21 @@
           </div>
         </div>
       </div>
+
+      <div class="day-filter-row" id="rest-subfilter-row">
+        <h3 style="margin-bottom:8px;">Rest Stop Type 🐾</h3>
+        <div class="filter-chips">
+          <div class="chip chip-day active" data-sub="welcome" onclick="toggleSubcat('welcome',this)">
+            <span class="day-color" style="background:var(--rest)"></span>Welcome Centers
+          </div>
+          <div class="chip chip-day active" data-sub="plaza" onclick="toggleSubcat('plaza',this)">
+            <span class="day-color" style="background:var(--rest)"></span>Service Plazas
+          </div>
+          <div class="chip chip-day active" data-sub="basic" onclick="toggleSubcat('basic',this)">
+            <span class="day-color" style="background:var(--rest)"></span>Rest Areas
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- POI LIST -->
@@ -454,6 +515,12 @@ const CATEGORIES = {
   tims:   { label: 'Tim Hortons', color: '#C8102E', icon: '☕', hours: 'Early morning – evening' },
   rest:   { label: 'Rest Area', color: '#2E7D52', icon: '🐾', hours: 'Open 24 hours · Dogs welcome on-leash' },
   hotel:  { label: 'Hotel Stay', color: '#7B3F9E', icon: '🏨', hours: 'Check-in: 4 PM · Check-out: 11 AM' },
+};
+
+const REST_SUBCATS = {
+  welcome: { label: 'Welcome Center', icon: 'ℹ️' },
+  plaza:   { label: 'Service Plaza',  icon: '⛽' },
+  basic:   { label: 'Rest Area',      icon: '🌳' },
 };
 
 const POIS = [
@@ -494,27 +561,27 @@ const POIS = [
     note:'Open 24 hours · great coffee break mid-Day 2' },
 
   // ── REST AREAS (dog-friendly) ──
-  { cat:'rest', leg:1, name:'I-70 E Rest Area', addr:'Near Warrenton, MO (I-70 Eastbound)', lat:38.8060, lng:-91.1430,
+  { cat:'rest', subcat:'basic', leg:1, name:'I-70 E Rest Area', addr:'Near Warrenton, MO (I-70 Eastbound)', lat:38.8060, lng:-91.1430,
     note:'🐾 Dog walk area · Picnic tables · Vending' },
-  { cat:'rest', leg:1, name:'Illinois Welcome Center', addr:'I-70 Eastbound, near St. Elmo, IL', lat:38.8877, lng:-88.9840,
+  { cat:'rest', subcat:'welcome', leg:1, name:'Illinois Welcome Center', addr:'I-70 Eastbound, near St. Elmo, IL', lat:38.8877, lng:-88.9840,
     note:'🐾 Dog-friendly · Clean facilities · Tourist info' },
-  { cat:'rest', leg:1, name:'Indiana I-70 Rest Area', addr:'I-70 Eastbound, near Knightstown, IN', lat:39.8020, lng:-85.5290,
+  { cat:'rest', subcat:'basic', leg:1, name:'Indiana I-70 Rest Area', addr:'I-70 Eastbound, near Knightstown, IN', lat:39.8020, lng:-85.5290,
     note:'🐾 Grassy walk area for dogs · Restrooms open 24/7' },
-  { cat:'rest', leg:1, name:'Ohio I-70 Rest Area', addr:'I-70 Eastbound, near Springfield, OH', lat:39.9440, lng:-83.8770,
+  { cat:'rest', subcat:'basic', leg:1, name:'Ohio I-70 Rest Area', addr:'I-70 Eastbound, near Springfield, OH', lat:39.9440, lng:-83.8770,
     note:'🐾 Large grassy pet walk area · Picnic tables' },
-  { cat:'rest', leg:2, name:'Ohio Turnpike – Commodore Perry Plaza', addr:'I-90 Eastbound, near Sandusky, OH', lat:41.4480, lng:-82.6920,
+  { cat:'rest', subcat:'plaza', leg:2, name:'Ohio Turnpike – Commodore Perry Plaza', addr:'I-90 Eastbound, near Sandusky, OH', lat:41.4480, lng:-82.6920,
     note:'🐾 Full service plaza · Gas · Food court · Pet walk area' },
-  { cat:'rest', leg:2, name:'New York Thruway – Angola Service Area', addr:'I-90 Eastbound, near Angola, NY', lat:42.6490, lng:-79.0220,
+  { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Angola Service Area', addr:'I-90 Eastbound, near Angola, NY', lat:42.6490, lng:-79.0220,
     note:'🐾 Pet-friendly area · Gas · Food · Near Lake Erie' },
-  { cat:'rest', leg:2, name:'New York Thruway – Ontario Service Area', addr:'I-90 Eastbound, near Rochester, NY', lat:43.2340, lng:-77.2790,
+  { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Ontario Service Area', addr:'I-90 Eastbound, near Rochester, NY', lat:43.2340, lng:-77.2790,
     note:'🐾 Full service plaza · Gas · McDonald\'s · Pet walk' },
-  { cat:'rest', leg:2, name:'New York Thruway – Chittenango Service Area', addr:'I-90 Eastbound, near Syracuse, NY', lat:43.0370, lng:-75.8610,
+  { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Chittenango Service Area', addr:'I-90 Eastbound, near Syracuse, NY', lat:43.0370, lng:-75.8610,
     note:'🐾 Pet-friendly grassy area · Full services' },
-  { cat:'rest', leg:2, name:'New York Thruway – Pattersonville Service Area', addr:'I-90 Eastbound, near Schenectady, NY', lat:42.8820, lng:-74.1060,
+  { cat:'rest', subcat:'plaza', leg:2, name:'New York Thruway – Pattersonville Service Area', addr:'I-90 Eastbound, near Schenectady, NY', lat:42.8820, lng:-74.1060,
     note:'🐾 Last major plaza before Albany exit · Gas · Food' },
-  { cat:'rest', leg:2, name:'Vermont Welcome Center', addr:'US-7 Northbound, near VT/MA border', lat:42.7780, lng:-73.2820,
+  { cat:'rest', subcat:'welcome', leg:2, name:'Vermont Welcome Center', addr:'US-7 Northbound, near VT/MA border', lat:42.7780, lng:-73.2820,
     note:'🐾 Welcome to Vermont! · Pet walk area · Maps & info' },
-  { cat:'rest', leg:3, name:'VT US-7 Rest Area', addr:'US-7 Northbound, near Brandon, VT', lat:43.7900, lng:-73.0850,
+  { cat:'rest', subcat:'basic', leg:3, name:'VT US-7 Rest Area', addr:'US-7 Northbound, near Brandon, VT', lat:43.7900, lng:-73.0850,
     note:'🐾 Quiet Vermont rest stop · Mid-route on Day 3' },
 ];
 
@@ -531,6 +598,7 @@ const WAYPOINTS = {
 // ═══════════════════════════════════════════
 const activeFilters = new Set(['costco','sams','tims','rest','hotel']);
 const activeLegs    = new Set([1, 2, 3]);
+const activeSubcats = new Set(['welcome','plaza','basic']);
 
 function toggleFilter(cat, el) {
   if (activeFilters.has(cat)) {
@@ -540,6 +608,7 @@ function toggleFilter(cat, el) {
     activeFilters.add(cat);
     el.classList.remove('inactive');
   }
+  updateRestSubFilterVisibility();
   renderSidebar();
   renderMarkers();
 }
@@ -556,9 +625,36 @@ function toggleLeg(leg, el) {
   renderMarkers();
 }
 
+function toggleSubcat(sub, el) {
+  if (activeSubcats.has(sub)) {
+    activeSubcats.delete(sub);
+    el.classList.remove('active');
+  } else {
+    activeSubcats.add(sub);
+    el.classList.add('active');
+  }
+  renderSidebar();
+  renderMarkers();
+}
+
+function updateRestSubFilterVisibility() {
+  const row = document.getElementById('rest-subfilter-row');
+  if (!row) return;
+  if (activeFilters.has('rest')) {
+    row.style.opacity = '1';
+    row.style.pointerEvents = 'auto';
+  } else {
+    row.style.opacity = '0.4';
+    row.style.pointerEvents = 'none';
+  }
+}
+
 // helper used by both renders
 function poiVisible(poi) {
-  return activeFilters.has(poi.cat) && activeLegs.has(poi.leg);
+  if (!activeFilters.has(poi.cat)) return false;
+  if (!activeLegs.has(poi.leg)) return false;
+  if (poi.cat === 'rest' && poi.subcat && !activeSubcats.has(poi.subcat)) return false;
+  return true;
 }
 
 // ═══════════════════════════════════════════
@@ -615,6 +711,11 @@ function makeStartEndIcon(emoji, color) {
   });
 }
 
+function appleMapsURL(poi) {
+  // daddr opens directions; q labels the pin
+  return `https://maps.apple.com/?daddr=${poi.lat},${poi.lng}&q=${encodeURIComponent(poi.name)}`;
+}
+
 let allMarkers = [];
 
 function renderMarkers() {
@@ -622,27 +723,34 @@ function renderMarkers() {
   allMarkers = [];
 
   // Start marker
+  const startPOI = { name:'Starting Point', lat:WAYPOINTS.start[0], lng:WAYPOINTS.start[1] };
   L.marker(WAYPOINTS.start, { icon: makeStartEndIcon('🏠', '#B8860B') })
-    .bindPopup(`<div class="popup-header" style="background:#B8860B">🏠 Starting Point</div><div class="popup-body"><div class="popup-addr">445 Elm Crossing Ct, Ballwin, MO 63021</div><div class="popup-note">Begin your Vermont adventure here!</div></div>`)
+    .bindPopup(`<div class="popup-header" style="background:#B8860B">🏠 Starting Point</div><div class="popup-body"><div class="popup-addr">445 Elm Crossing Ct, Ballwin, MO 63021</div><div class="popup-note">Begin your Vermont adventure here!</div><a class="apple-maps-btn" href="${appleMapsURL(startPOI)}" target="_blank" rel="noopener">🍎 Open in Apple Maps</a></div>`)
     .addTo(markerLayer);
 
   // End marker
+  const endPOI = { name:'Final Destination', lat:WAYPOINTS.colchester[0], lng:WAYPOINTS.colchester[1] };
   L.marker(WAYPOINTS.colchester, { icon: makeStartEndIcon('🏁', '#B8860B') })
-    .bindPopup(`<div class="popup-header" style="background:#B8860B">🏁 Final Destination</div><div class="popup-body"><div class="popup-addr">120 Beach Rd, Colchester, VT</div><div class="popup-note">You made it!</div></div>`)
+    .bindPopup(`<div class="popup-header" style="background:#B8860B">🏁 Final Destination</div><div class="popup-body"><div class="popup-addr">120 Beach Rd, Colchester, VT</div><div class="popup-note">You made it!</div><a class="apple-maps-btn" href="${appleMapsURL(endPOI)}" target="_blank" rel="noopener">🍎 Open in Apple Maps</a></div>`)
     .addTo(markerLayer);
 
   // POI markers
   POIS.forEach((poi, i) => {
     if (!poiVisible(poi)) return;
     const c = CATEGORIES[poi.cat];
+    const subLabel = poi.subcat && REST_SUBCATS[poi.subcat]
+      ? `<div class="popup-hours" style="font-weight:700;color:${c.color};">${REST_SUBCATS[poi.subcat].icon} ${REST_SUBCATS[poi.subcat].label}</div>`
+      : '';
     const marker = L.marker([poi.lat, poi.lng], { icon: makeIcon(poi.cat) })
       .bindPopup(`
         <div class="popup-header" style="background:${c.color}">${c.icon} ${poi.name}</div>
         <div class="popup-body">
+          ${subLabel}
           <div class="popup-addr">${poi.addr}</div>
           <div class="popup-hours">${c.hours}</div>
           ${poi.note ? `<div class="popup-note">${poi.note}</div>` : ''}
           ${poi.phone ? `<div class="popup-hours">📞 ${poi.phone}</div>` : ''}
+          <a class="apple-maps-btn" href="${appleMapsURL(poi)}" target="_blank" rel="noopener">🍎 Open in Apple Maps</a>
         </div>
       `)
       .addTo(markerLayer);
@@ -732,10 +840,18 @@ function renderSidebar() {
       const card = document.createElement('div');
       card.className = 'poi-card';
       card.style.borderLeftColor = c.color;
+      const subBadge = poi.subcat && REST_SUBCATS[poi.subcat]
+        ? `<span class="poi-card-badge" style="background:${c.color}">${REST_SUBCATS[poi.subcat].icon} ${REST_SUBCATS[poi.subcat].label}</span>`
+        : `<span class="poi-card-badge" style="background:${c.color}">${c.label}</span>`;
       card.innerHTML = `
-        <div class="poi-card-name">${poi.name}</div>
-        <div class="poi-card-addr">${poi.addr}</div>
-        ${poi.note ? `<div class="poi-card-meta"><span class="poi-card-badge" style="background:${c.color}">${c.label}</span>${poi.note}</div>` : ''}
+        <div class="poi-card-top">
+          <div class="poi-card-main">
+            <div class="poi-card-name">${poi.name}</div>
+            <div class="poi-card-addr">${poi.addr}</div>
+            ${poi.note ? `<div class="poi-card-meta">${subBadge}<span class="poi-card-note-text">${poi.note}</span></div>` : ''}
+          </div>
+          <a class="apple-maps-icon" href="${appleMapsURL(poi)}" target="_blank" rel="noopener" title="Open in Apple Maps" onclick="event.stopPropagation();">🍎</a>
+        </div>
       `;
       card.addEventListener('click', () => {
         map.setView([poi.lat, poi.lng], 13, { animate: true, duration: 0.8 });
