@@ -374,6 +374,9 @@
       border-radius: 3px;
       border: none;
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      white-space: nowrap;
+      display: inline-block;
+      width: max-content;
     }
 
     /* Dog paw icon in rest areas */
@@ -837,10 +840,20 @@ async function drawRoutes() {
 
   // Leg labels
   L.marker([39.80, -87.50], { 
-    icon: L.divIcon({ className:'', html:'<div class="leg-label">Day 1 · ~550 mi</div>', iconAnchor:[40,10] }) 
+    icon: L.divIcon({ 
+      className:'', 
+      html:'<div class="leg-label">Day 1 · ~550 mi</div>', 
+      iconSize: [120, 20],
+      iconAnchor: [60, 10]
+    }) 
   }).addTo(map);
   L.marker([42.60, -78.50], { 
-    icon: L.divIcon({ className:'', html:'<div class="leg-label">Day 2 · ~500 mi</div>', iconAnchor:[40,10] }) 
+    icon: L.divIcon({ 
+      className:'', 
+      html:'<div class="leg-label">Day 2 · ~500 mi</div>', 
+      iconSize: [120, 20],
+      iconAnchor: [60, 10]
+    }) 
   }).addTo(map);
 }
 
