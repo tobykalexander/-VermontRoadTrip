@@ -78,7 +78,15 @@
       overflow: hidden;
       border-right: 1px solid var(--cream-dk);
       box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+      transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                  height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    .sidebar.collapsed {
+      width: 0;
+      border-right: none;
+      box-shadow: none;
+    }
+    .sidebar.collapsed > * { display: none; }
 
     .sidebar-scroll { flex: 1; overflow-y: auto; padding-bottom: 24px; }
     .sidebar-scroll::-webkit-scrollbar { width: 5px; }
@@ -228,6 +236,85 @@
       0%, 100% { transform: scale(1); opacity: 1; }
       50% { transform: scale(1.4); opacity: 0.6; }
     }
+
+    /* ── SIDEBAR TOGGLE TAB ── */
+    .sidebar-toggle-tab {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 600;
+      background: var(--forest);
+      color: var(--gold-lt);
+      border: none;
+      border-right: 3px solid var(--gold);
+      width: 26px;
+      height: 72px;
+      border-radius: 0 8px 8px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 3px 2px 12px rgba(0,0,0,0.18);
+      transition: all 0.2s ease;
+      font-family: 'Lato', sans-serif;
+      padding: 0;
+    }
+    .sidebar-toggle-tab:hover {
+      background: var(--forest-mid);
+      color: var(--cream);
+      width: 32px;
+    }
+    .sidebar-toggle-tab .tab-arrow {
+      display: inline-block;
+      line-height: 1;
+    }
+
+    /* ── FLOATING FILTER BAR (shown when sidebar collapsed) ── */
+    .floating-filter-bar {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      background: var(--white);
+      border-radius: 32px;
+      padding: 8px 16px 8px 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+      border: 1px solid var(--cream-dk);
+      display: none;
+      align-items: center;
+      gap: 12px;
+      max-width: calc(100% - 220px);
+      animation: floatFadeIn 0.25s ease-out;
+    }
+    .floating-filter-bar.visible { display: flex; }
+    @keyframes floatFadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    .floating-filter-bar .float-label {
+      font-family: 'Playfair Display', serif;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      white-space: nowrap;
+      padding-right: 10px;
+      border-right: 1px solid var(--cream-dk);
+      flex-shrink: 0;
+    }
+    .floating-filter-bar .filter-chips {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .floating-filter-bar .filter-chips::-webkit-scrollbar { display: none; }
+    .floating-filter-bar .chip { flex-shrink: 0; }
 
     /* User location marker */
     .user-location-pulse {
@@ -427,6 +514,55 @@
         overflow: visible;
       }
 
+      /* Collapsed on mobile: hide vertically instead of horizontally */
+      .sidebar.collapsed {
+        width: 100%;
+        height: 0;
+        min-height: 0;
+      }
+      .sidebar.collapsed + .map-wrapper {
+        height: calc(100vh - 64px);
+        flex: 1;
+      }
+
+      /* Toggle tab pinned to top-center on mobile */
+      .sidebar-toggle-tab {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 72px;
+        height: 22px;
+        border-radius: 0 0 10px 10px;
+        border-right: none;
+        border-bottom: 3px solid var(--gold);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        font-size: 11px;
+      }
+      .sidebar-toggle-tab:hover {
+        width: 80px;
+        height: 24px;
+      }
+
+      /* Floating filter bar — full width below toggle tab on mobile */
+      .floating-filter-bar {
+        left: 8px;
+        right: 8px;
+        top: 32px;
+        transform: none;
+        max-width: none;
+        padding: 7px 10px;
+        border-radius: 12px;
+        gap: 8px;
+      }
+      .floating-filter-bar.visible {
+        animation: floatFadeInMobile 0.25s ease-out;
+      }
+      @keyframes floatFadeInMobile {
+        from { opacity: 0; transform: translateY(-8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .floating-filter-bar .float-label { display: none; }
+
       .map-wrapper { height: 55vh; flex: none; }
       #map { height: 100%; width: 100%; }
       .header-stats { display: none; }
@@ -563,6 +699,23 @@
 
   <!-- MAP -->
   <div class="map-wrapper">
+    <button class="sidebar-toggle-tab" id="sidebar-toggle" onclick="toggleSidebar()"
+            aria-label="Hide information panel" title="Hide information panel">
+      <span class="tab-arrow" id="tab-arrow">◀</span>
+    </button>
+
+    <div class="floating-filter-bar" id="floating-filter-bar">
+      <span class="float-label">Filter</span>
+      <div class="filter-chips" id="floating-filter-chips">
+        <div class="chip chip-costco" data-cat="costco" onclick="toggleFilter('costco',this)">🛒 Costco</div>
+        <div class="chip chip-sams"   data-cat="sams"   onclick="toggleFilter('sams',this)">🏬 Sam's Club</div>
+        <div class="chip chip-target inactive" data-cat="target" onclick="toggleFilter('target',this)">🎯 Target</div>
+        <div class="chip chip-tims"   data-cat="tims"   onclick="toggleFilter('tims',this)">☕ Tim Hortons</div>
+        <div class="chip chip-rest"   data-cat="rest"   onclick="toggleFilter('rest',this)">🐾 Rest Areas</div>
+        <div class="chip chip-hotel"  data-cat="hotel"  onclick="toggleFilter('hotel',this)">🏨 Hotels</div>
+      </div>
+    </div>
+
     <button class="locate-btn" id="locate-btn" onclick="locateMe()">
       <span class="pulse-dot"></span>
       Show My Location
@@ -692,11 +845,14 @@ const activeSubcats = new Set(['welcome','plaza','basic']);
 function toggleFilter(cat, el) {
   if (activeFilters.has(cat)) {
     activeFilters.delete(cat);
-    el.classList.add('inactive');
   } else {
     activeFilters.add(cat);
-    el.classList.remove('inactive');
   }
+  // Sync visual state on ALL chips for this category (sidebar + floating bar)
+  const isInactive = !activeFilters.has(cat);
+  document.querySelectorAll(`.chip[data-cat="${cat}"]`).forEach(chip => {
+    chip.classList.toggle('inactive', isInactive);
+  });
   updateRestSubFilterVisibility();
   renderSidebar();
   renderMarkers();
@@ -1035,6 +1191,45 @@ function locateMe() {
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
   );
 }
+
+// ═══════════════════════════════════════════
+// SIDEBAR COLLAPSE / EXPAND
+// ═══════════════════════════════════════════
+function toggleSidebar() {
+  const sidebar  = document.querySelector('.sidebar');
+  const toggle   = document.getElementById('sidebar-toggle');
+  const arrow    = document.getElementById('tab-arrow');
+  const floatBar = document.getElementById('floating-filter-bar');
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  const willCollapse = !sidebar.classList.contains('collapsed');
+  sidebar.classList.toggle('collapsed', willCollapse);
+  floatBar.classList.toggle('visible', willCollapse);
+
+  // Arrow direction depends on layout (horizontal vs. vertical sidebar)
+  if (isMobile) {
+    arrow.textContent = willCollapse ? '▼' : '▲';
+  } else {
+    arrow.textContent = willCollapse ? '▶' : '◀';
+  }
+
+  const label = willCollapse ? 'Show information panel' : 'Hide information panel';
+  toggle.setAttribute('aria-label', label);
+  toggle.title = label;
+
+  // Let Leaflet know the map container resized so tiles redraw correctly
+  setTimeout(() => { if (window.map) map.invalidateSize(); }, 340);
+}
+
+// Re-evaluate arrow direction if the user rotates / resizes across the mobile breakpoint
+window.addEventListener('resize', () => {
+  const arrow = document.getElementById('tab-arrow');
+  if (!arrow) return;
+  const collapsed = document.querySelector('.sidebar').classList.contains('collapsed');
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (isMobile) arrow.textContent = collapsed ? '▼' : '▲';
+  else          arrow.textContent = collapsed ? '▶' : '◀';
+});
 
 // ═══════════════════════════════════════════
 // INIT
