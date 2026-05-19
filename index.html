@@ -237,6 +237,94 @@
       50% { transform: scale(1.4); opacity: 0.6; }
     }
 
+    /* ── WEATHER TOGGLE BUTTON ── */
+    .weather-btn {
+      position: absolute;
+      top: 64px;
+      right: 16px;
+      z-index: 500;
+      background: white;
+      border: none;
+      border-radius: 24px;
+      padding: 9px 16px;
+      font-family: 'Lato', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--forest);
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+    .weather-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 16px rgba(0,0,0,0.22);
+    }
+    .weather-btn.active {
+      background: #1976D2;
+      color: white;
+    }
+    .weather-btn.loading {
+      background: var(--gold);
+      color: white;
+    }
+
+    /* ── WEATHER MARKERS ── */
+    .weather-marker {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: white;
+      border: 2px solid #1976D2;
+      border-radius: 18px;
+      padding: 3px 9px 3px 7px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+      font-family: 'Lato', sans-serif;
+      white-space: nowrap;
+      transition: transform 0.15s ease;
+    }
+    .weather-marker:hover {
+      transform: scale(1.08);
+    }
+    .weather-icon { font-size: 14px; line-height: 1; }
+    .weather-temp {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+    .popup-wx-hero {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--cream-dk);
+    }
+    .popup-wx-icon { font-size: 36px; line-height: 1; }
+    .popup-wx-temp {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--forest);
+      line-height: 1;
+    }
+    .popup-wx-feels {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .popup-wx-stamp {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
     /* ── SIDEBAR TOGGLE TAB ── */
     .sidebar-toggle-tab {
       position: absolute;
@@ -569,6 +657,7 @@
       .header-title h1 { font-size: 17px; }
       .header-title p { font-size: 10px; }
       .locate-btn { font-size: 11px; padding: 7px 12px; top: 10px; right: 10px; }
+      .weather-btn { font-size: 11px; padding: 7px 12px; top: 50px; right: 10px; }
 
       /* Compact journey on mobile */
       .journey-header { padding: 12px 18px 10px; }
@@ -719,6 +808,10 @@
     <button class="locate-btn" id="locate-btn" onclick="locateMe()">
       <span class="pulse-dot"></span>
       Show My Location
+    </button>
+    <button class="weather-btn" id="weather-btn" onclick="toggleWeather()"
+            aria-label="Toggle weather along route" title="Show weather along route">
+      🌤️ Weather
     </button>
     <div id="map"></div>
   </div>
@@ -1230,6 +1323,154 @@ window.addEventListener('resize', () => {
   if (isMobile) arrow.textContent = collapsed ? '▼' : '▲';
   else          arrow.textContent = collapsed ? '▶' : '◀';
 });
+
+// ═══════════════════════════════════════════
+// WEATHER ALONG ROUTE (Open-Meteo, no API key required)
+// ═══════════════════════════════════════════
+const WEATHER_POINTS = [
+  { name: 'Ballwin, MO',      lat: 38.5950, lng: -90.5462 },
+  { name: 'Indianapolis, IN', lat: 39.7684, lng: -86.1581 },
+  { name: 'Columbus, OH',     lat: 39.9612, lng: -82.9988 },
+  { name: 'Cleveland, OH',    lat: 41.4993, lng: -81.6944 },
+  { name: 'Buffalo, NY',      lat: 42.8864, lng: -78.8784 },
+  { name: 'Syracuse, NY',     lat: 43.0481, lng: -76.1474 },
+  { name: 'Albany, NY',       lat: 42.6526, lng: -73.7562 },
+  { name: 'Manchester, VT',   lat: 43.1657, lng: -73.0706 },
+  { name: 'Colchester, VT',   lat: 44.5444, lng: -73.0876 },
+];
+
+// WMO weather codes → icon + label (https://open-meteo.com/en/docs)
+const WEATHER_CODES = {
+  0:  { icon: '☀️', label: 'Clear sky' },
+  1:  { icon: '🌤️', label: 'Mainly clear' },
+  2:  { icon: '⛅', label: 'Partly cloudy' },
+  3:  { icon: '☁️', label: 'Overcast' },
+  45: { icon: '🌫️', label: 'Fog' },
+  48: { icon: '🌫️', label: 'Freezing fog' },
+  51: { icon: '🌦️', label: 'Light drizzle' },
+  53: { icon: '🌦️', label: 'Drizzle' },
+  55: { icon: '🌦️', label: 'Heavy drizzle' },
+  56: { icon: '🌧️', label: 'Freezing drizzle' },
+  57: { icon: '🌧️', label: 'Heavy freezing drizzle' },
+  61: { icon: '🌧️', label: 'Light rain' },
+  63: { icon: '🌧️', label: 'Rain' },
+  65: { icon: '🌧️', label: 'Heavy rain' },
+  66: { icon: '🌧️', label: 'Freezing rain' },
+  67: { icon: '🌧️', label: 'Heavy freezing rain' },
+  71: { icon: '🌨️', label: 'Light snow' },
+  73: { icon: '🌨️', label: 'Snow' },
+  75: { icon: '🌨️', label: 'Heavy snow' },
+  77: { icon: '❄️', label: 'Snow grains' },
+  80: { icon: '🌦️', label: 'Light rain showers' },
+  81: { icon: '🌧️', label: 'Rain showers' },
+  82: { icon: '⛈️', label: 'Heavy rain showers' },
+  85: { icon: '🌨️', label: 'Snow showers' },
+  86: { icon: '🌨️', label: 'Heavy snow showers' },
+  95: { icon: '⛈️', label: 'Thunderstorm' },
+  96: { icon: '⛈️', label: 'Thunderstorm w/ hail' },
+  99: { icon: '⛈️', label: 'Severe thunderstorm' },
+};
+
+const weatherLayer = L.layerGroup();
+let weatherLoaded  = false;
+let weatherVisible = false;
+
+function fmtTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch { return ''; }
+}
+
+async function loadWeather() {
+  const lats = WEATHER_POINTS.map(p => p.lat).join(',');
+  const lngs = WEATHER_POINTS.map(p => p.lng).join(',');
+  const url  =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${lats}&longitude=${lngs}` +
+    `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,is_day` +
+    `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Weather API error: ' + res.status);
+  const data = await res.json();
+
+  // Multi-location responses are an array; single is an object
+  const locations = Array.isArray(data) ? data : [data];
+
+  locations.forEach((loc, i) => {
+    const pt = WEATHER_POINTS[i];
+    const wx = loc.current || {};
+    const codeInfo = WEATHER_CODES[wx.weather_code] || { icon: '❓', label: 'Unknown' };
+    const temp  = Math.round(wx.temperature_2m);
+    const feels = Math.round(wx.apparent_temperature);
+    const wind  = Math.round(wx.wind_speed_10m);
+    const hum   = Math.round(wx.relative_humidity_2m);
+
+    const marker = L.marker([pt.lat, pt.lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="weather-marker">
+                 <span class="weather-icon">${codeInfo.icon}</span>
+                 <span class="weather-temp">${temp}°</span>
+               </div>`,
+        iconSize: [62, 30],
+        iconAnchor: [31, 15],
+        popupAnchor: [0, -16],
+      }),
+      zIndexOffset: -200, // sit below POI markers
+    }).bindPopup(`
+      <div class="popup-header" style="background:#1976D2">🌤️ ${pt.name}</div>
+      <div class="popup-body">
+        <div class="popup-wx-hero">
+          <div class="popup-wx-icon">${codeInfo.icon}</div>
+          <div>
+            <div class="popup-wx-temp">${temp}°F</div>
+            <div class="popup-wx-feels">Feels like ${feels}°F</div>
+          </div>
+        </div>
+        <div class="popup-hours" style="font-weight:700;color:#1976D2;">${codeInfo.label}</div>
+        <div class="popup-hours">💨 Wind: ${wind} mph</div>
+        <div class="popup-hours">💧 Humidity: ${hum}%</div>
+        <div class="popup-wx-stamp">As of ${fmtTime(wx.time)} local</div>
+      </div>
+    `);
+
+    weatherLayer.addLayer(marker);
+  });
+
+  weatherLoaded = true;
+}
+
+async function toggleWeather() {
+  const btn = document.getElementById('weather-btn');
+  weatherVisible = !weatherVisible;
+
+  if (weatherVisible) {
+    if (!weatherLoaded) {
+      btn.classList.add('loading');
+      btn.innerHTML = '<span class="pulse-dot" style="background:white"></span>Loading...';
+      try {
+        await loadWeather();
+      } catch (err) {
+        console.error('Weather load failed:', err);
+        weatherVisible = false;
+        btn.classList.remove('loading');
+        btn.innerHTML = '🌤️ Weather';
+        alert("Couldn't load weather data. Check your connection and try again.");
+        return;
+      }
+      btn.classList.remove('loading');
+    }
+    weatherLayer.addTo(map);
+    btn.classList.add('active');
+    btn.innerHTML = '🌤️ Weather · ON';
+  } else {
+    map.removeLayer(weatherLayer);
+    btn.classList.remove('active');
+    btn.innerHTML = '🌤️ Weather';
+  }
+}
 
 // ═══════════════════════════════════════════
 // INIT
