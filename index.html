@@ -23,6 +23,7 @@
       --costco:   #E8283C;
       --sams:     #0060A9;
       --tims:     #C8102E;
+      --bucees:   #FBD200;
       --rest:     #2E7D52;
       --hotel:    #7B3F9E;
       --home:     #B8860B;
@@ -170,6 +171,7 @@
     .chip-sams    { background: var(--sams); }
     .chip-target  { background: #A62229; }
     .chip-tims    { background: var(--tims); }
+    .chip-bucees  { background: var(--bucees); color: var(--bark); }
     .chip-rest    { background: var(--rest); }
     .chip-hotel   { background: var(--hotel); }
 
@@ -747,6 +749,7 @@
         <div class="chip chip-sams" data-cat="sams" onclick="toggleFilter('sams',this)">🏬 Sam's Club</div>
         <div class="chip chip-target inactive" data-cat="target" onclick="toggleFilter('target',this)">🎯 Target</div>
         <div class="chip chip-tims" data-cat="tims" onclick="toggleFilter('tims',this)">☕ Tim Hortons</div>
+        <div class="chip chip-bucees" data-cat="bucees" onclick="toggleFilter('bucees',this)">🦫 Buc-ee's</div>
         <div class="chip chip-rest" data-cat="rest" onclick="toggleFilter('rest',this)">🐾 Rest Areas</div>
         <div class="chip chip-hotel" data-cat="hotel" onclick="toggleFilter('hotel',this)">🏨 Hotels</div>
       </div>
@@ -762,6 +765,9 @@
           </div>
           <div class="chip chip-day active" data-leg="3" onclick="toggleLeg(3,this)">
             <span class="day-color" style="background:#7B3F9E"></span>Day 3 · VT → VT
+          </div>
+          <div class="chip chip-day active" data-leg="4" onclick="toggleLeg(4,this)">
+            <span class="day-color" style="background:#B85C3A"></span>Return Trip · VT → MO
           </div>
         </div>
       </div>
@@ -800,6 +806,7 @@
         <div class="chip chip-sams"   data-cat="sams"   onclick="toggleFilter('sams',this)">🏬 Sam's Club</div>
         <div class="chip chip-target inactive" data-cat="target" onclick="toggleFilter('target',this)">🎯 Target</div>
         <div class="chip chip-tims"   data-cat="tims"   onclick="toggleFilter('tims',this)">☕ Tim Hortons</div>
+        <div class="chip chip-bucees" data-cat="bucees" onclick="toggleFilter('bucees',this)">🦫 Buc-ee's</div>
         <div class="chip chip-rest"   data-cat="rest"   onclick="toggleFilter('rest',this)">🐾 Rest Areas</div>
         <div class="chip chip-hotel"  data-cat="hotel"  onclick="toggleFilter('hotel',this)">🏨 Hotels</div>
       </div>
@@ -826,6 +833,7 @@ const CATEGORIES = {
   sams:   { label: "Sam's Club", color: '#0060A9', icon: '🏬', hours: 'Daily 9 AM – 8 PM' },
   target: { label: 'Target', color: '#A62229', icon: '🎯', hours: 'Daily 7/8 AM – 10 PM' },
   tims:   { label: 'Tim Hortons', color: '#C8102E', icon: '☕', hours: 'Early morning – evening' },
+  bucees: { label: "Buc-ee's", color: '#FBD200', icon: '🦫', hours: 'Open 24 hours · Famous bathrooms · Brisket sandwiches · 120 fuel pumps' },
   rest:   { label: 'Rest Area', color: '#2E7D52', icon: '🐾', hours: 'Open 24 hours · Dogs welcome on-leash' },
   hotel:  { label: 'Hotel Stay', color: '#7B3F9E', icon: '🏨', hours: 'Check-in: 4 PM · Check-out: 11 AM' },
 };
@@ -842,6 +850,12 @@ const POIS = [
     note:'Night 1 · Dog-friendly · Restaurant on-site', phone:'(216) 357-3250' },
   { cat:'hotel', leg:2, name:'Kimpton Taconic Hotel', addr:'3835 Main St, Manchester, VT', lat:43.1657, lng:-73.0706,
     note:'Nights 2–4 · Dog-friendly · Wood burning fireplace, beautiful Vermont inn', phone:'(802) 362-0147' },
+  { cat:'hotel', leg:4, name:'Staybridge Suites Cleveland Mayfield Heights', addr:'6103 Landerhaven Dr, Mayfield Heights, OH', lat:41.5040, lng:-81.4594,
+    note:'Return trip · IHG extended-stay · Suite-style rooms with kitchenettes · Free breakfast · Right off I-271 near Beachwood', phone:'(440) 442-9200' },
+
+  // ── BUC-EE'S ──
+  { cat:'bucees', leg:1, name:"Buc-ee's", addr:'8000 OH-235, Huber Heights, OH', lat:39.8708, lng:-84.0537,
+    note:'🦫 Just east of Dayton off I-70 Exit 38 · Iconic 24-hr mega travel center · Brisket sandwiches, snacks, immaculate bathrooms, 120 gas pumps · Worth the stop!' },
 
   // ── COSTCO ──
   { cat:'costco', leg:1, name:'Costco', addr:'4200 Rusty Rd, St. Louis, MO', lat:38.5085, lng:-90.3389,
@@ -948,8 +962,8 @@ const WAYPOINTS = {
 // ═══════════════════════════════════════════
 // FILTER STATE
 // ═══════════════════════════════════════════
-const activeFilters = new Set(['costco','sams','tims','rest','hotel']); // target excluded by default
-const activeLegs    = new Set([1, 2, 3]);
+const activeFilters = new Set(['costco','sams','tims','bucees','rest','hotel']); // target excluded by default
+const activeLegs    = new Set([1, 2, 3, 4]);
 const activeSubcats = new Set(['welcome','plaza','basic']);
 
 function toggleFilter(cat, el) {
